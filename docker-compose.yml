@@ -1,0 +1,48 @@
+version: "3.7"
+
+services:
+  db:
+    image: postgres:12-alpine
+    restart: always
+    environment:
+      - POSTGRES_PASSWORD
+    volumes:
+      - db:/var/lib/postgresql/data
+  redis:
+    image: redis:6.2-alpine
+    restart: always
+    ports:
+      - 6379:6379
+  web:
+    build: .
+    restart: always
+    command: uvicorn djchat.asgi:application
+    environment:
+      - ALLOWED_HOSTS
+      - SECRET_KEY
+      - POSTGRES_PASSWORD
+      - DB_HOST=db
+      - DB_ENGINE=django.db.backends.postgresql
+      - DEBUG=False
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    depends_on:
+      - db
+      - redis
+  nginx:
+    build: ./nginx
+    restart: always
+    environment:
+      - TZ=Europe/Kiev
+      - LETSENCRYPT=true
+      - LE_EMAIL
+      - LE_FQDN
+    ports:
+      - 8008:80
+      - 4443:443
+    depends_on:
+      - web
+    volumes:
+      - /etc/ssl:/etc/nginx/ssl
+volumes:
+  db: null

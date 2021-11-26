@@ -1,0 +1,72 @@
+{% extends 'chat/base.html' %}
+{% block tab_title %}Общий чат{% endblock %}
+
+{% block content %}
+    <h2> Пользователь: {{ user.username }} </h2>
+    <p><a href="{% url 'logout' %}">выйти</a></p>
+
+    <div id="chat-window">
+    
+    </div>
+    <input id="chat-message-input" type="text" size="100"><br>
+    <input id="chat-message-submit" type="button" value="Отправить">
+    <input id="chat-message-submit-with-delay" type="button" value="Отправить через 10 секунд">
+    <script>
+
+        const chatSocket = new WebSocket(
+            'ws://'
+            + window.location.host
+            + '/ws/chat/'
+        );
+
+        chatSocket.onmessage = function(e) {
+            const data = JSON.parse(e.data);
+            document.querySelector('#chat-window').innerHTML += (data.message + '\n');
+        };
+
+        document.querySelector('#chat-message-input').focus();
+        document.querySelector('#chat-message-input').onkeyup = function(e) {
+            if (e.keyCode === 13) {  // enter, return
+                document.querySelector('#chat-message-submit').click();
+            }
+        };
+
+        document.querySelector('#chat-message-submit').onclick = function(e) {
+            const messageInputDom = document.querySelector('#chat-message-input');
+            const message = messageInputDom.value;
+            chatSocket.send(JSON.stringify({
+                'message': message,
+            }));
+            messageInputDom.value = '';
+        };
+
+        document.querySelector('#chat-message-submit-with-delay').onclick = function(e) {
+            const messageInputDom = document.querySelector('#chat-message-input');
+            const message = messageInputDom.value;
+            chatSocket.send(JSON.stringify({
+                'message': message,
+                'delay': 10,
+            }));
+            messageInputDom.value = '';
+        };
+
+
+        window.addEventListener('DOMContentLoaded', (event) => loadMessages());
+
+        function loadMessages(){
+            fetch('{% url "messages" %}').then(response => response.json()).then(data => printMessages(data));
+        }
+
+        function printMessages(data){
+            console.log(data)
+            data.forEach((item, index, array) => {
+                message = "<p><b>" + item.username + "</b><br>"
+                message += "<b>" + item.post_time + " > </b>"
+                message += item.message + "</p>"
+                document.querySelector('#chat-window').innerHTML += message;
+            })
+        }
+
+    </script>
+
+{% endblock %}

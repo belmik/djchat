@@ -1,0 +1,36 @@
+{% extends 'chat/base.html' %}
+
+{% block tab_title %}Регистарация нового пользователя{% endblock tab_title %}
+
+{% block content %}
+<form method="post" action="{% url 'new_user' %}">
+{% csrf_token %}
+<table>
+
+<tr>
+    <td>{{ form.username.label_tag }}</td>
+    <td>{{ form.username }}</td>
+</tr>
+<tr>
+    <td colspan="2">{{ form.username.help_text }}<br><br></td>
+</tr>
+<tr>
+    <td>{{ form.password1.label_tag }}</td>
+    <td>{{ form.password1 }}</td>
+</tr>
+<tr>
+    <td>{{ form.password2.label_tag }}</td>
+    <td>{{ form.password2 }}</td>
+</tr>
+<tr>
+    <td colspan="2">{{ form.password1.help_text }}<br><br></td>
+</tr>
+<tr>
+    <td colspan="2">{{ form.errors }}<br><br></td>
+</tr>
+</table>
+
+<input type="submit" value="зарегистрироваться">
+<input type="hidden" name="next" value="{{ next }}">
+</form>
+{% endblock content %}

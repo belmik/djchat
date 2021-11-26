@@ -1,0 +1,26 @@
+[tool.poetry]
+name = "django-chat"
+version = "0.1.0"
+description = "chat for theme discussions"
+authors = ["belmik <belmik.mail@gmail.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+django = "~3.2"
+psycopg2 = "~2.9"
+channels = "~2.4"
+channels_redis = "~3.3"
+djangorestframework = "~3.12"
+uvicorn = {version = "~0.15.0", extras = ["standard"]}
+
+[tool.poetry.dev-dependencies]
+black = "~21.11b1"
+mypy = "~0.910"
+django-stubs = "~1.9"
+djangorestframework-stubs = "~1.4"
+isort = "~5.10"
+bpython = "~0.22"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
