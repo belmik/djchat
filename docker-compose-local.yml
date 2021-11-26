@@ -18,7 +18,7 @@ services:
     restart: always
     command: uvicorn djchat.asgi:application --host 0.0.0.0
     environment:
-      - ALLOWED_HOSTS
+      - ALLOWED_HOSTS=0.0.0.0
       - SECRET_KEY
       - POSTGRES_PASSWORD
       - DB_HOST=db
