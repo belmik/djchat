@@ -4,14 +4,15 @@
 {% block content %}
     <h2> Пользователь: {{ user.username }} </h2>
     <p><a href="{% url 'logout' %}">выйти</a></p>
-
-    <div id="chat-window">
+    <p id="pagination"> </p>
+    <div id="chat-window" style="height: 700px;overflow-y: scroll;">
     
     </div>
     <input id="chat-message-input" type="text" size="100"><br>
     <input id="chat-message-submit" type="button" value="Отправить">
     <input id="chat-message-submit-with-delay" type="button" value="Отправить через 10 секунд">
     <script>
+        let curPage = 1;
 
         const chatSocket = new WebSocket(
             'ws://'
@@ -31,12 +32,14 @@
             }
         };
 
-        document.querySelector('#chat-message-submit').onclick = function(e) {
+        document.querySelector('#chat-message-submit').onclick = e => {
             const messageInputDom = document.querySelector('#chat-message-input');
             const message = messageInputDom.value;
-            chatSocket.send(JSON.stringify({
-                'message': message,
-            }));
+            const data = {'message': message};
+            chatSocket.send(JSON.stringify(data));
+            if(curPage != 1){
+                loadMessages("{% url "messages" %}?page=1");
+            }
             messageInputDom.value = '';
         };
 
@@ -47,24 +50,57 @@
                 'message': message,
                 'delay': 10,
             }));
+            
             messageInputDom.value = '';
         };
 
 
-        window.addEventListener('DOMContentLoaded', (event) => loadMessages());
+        window.addEventListener('DOMContentLoaded', (event) => loadMessages('{% url "messages" %}'));
 
-        function loadMessages(){
-            fetch('{% url "messages" %}').then(response => response.json()).then(data => printMessages(data));
+        function loadMessages(url){
+            fetch(url)
+            .then(response => response.json())
+            .then(data => printMessages(data));
         }
 
         function printMessages(data){
-            console.log(data)
-            data.forEach((item, index, array) => {
-                message = "<p><b>" + item.username + "</b><br>"
-                message += "<b>" + item.post_time + " > </b>"
-                message += item.message + "</p>"
-                document.querySelector('#chat-window').innerHTML += message;
-            })
+            const messages = data.results.reverse();
+            let messagesHtml = '';
+            messages.forEach((item, index, array) => {
+                messagesHtml += "<p><b>" + item.username + "</b><br>"
+                messagesHtml += "<b>" + item.post_time + " > </b>"
+                messagesHtml += item.message + "</p>"
+            });
+            document.querySelector('#chat-window').innerHTML = messagesHtml;
+            printPagination(data.count);
+        }
+
+        function printPagination(messages_count){
+            const page_size = {{ page_size }}
+            if(messages_count <= page_size){
+                return;
+            }
+            let pageCount = parseInt(messages_count/page_size);
+            if((messages_count % page_size) > 0)
+                pageCount++
+            const paginationDom = document.querySelector('#pagination');
+            paginationDom.innerHTML = '';
+            for(let i = 1; i <= pageCount; i++){
+                let page_link = document.createElement('a');
+                page_link.href = '{% url "messages" %}?page=' + i;
+                page_link.innerHTML = i;
+                paginationDom.appendChild(page_link);
+                paginationDom.innerHTML += "<span>&nbsp;&nbsp;</span>"
+            }
+        }
+
+        document.querySelector('#pagination').onclick = e => {
+            if(e.target.nodeName != 'A')
+                return;
+            loadMessages(e.target.href);
+            curPage = e.target.href.slice(-1);
+            return false;
+            
         }
 
     </script>
