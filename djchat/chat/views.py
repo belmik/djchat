@@ -5,16 +5,17 @@ from typing import Any
 from chat.models import ChatMessage
 from chat.serializers import ChatMessageSerializer
 from django.conf import settings
+from django.contrib.auth import login
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.models import User
 from django.contrib.auth.views import LoginView, LogoutView
 from django.http.request import HttpRequest
 from django.http.response import HttpResponse
-from django.shortcuts import render
+from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
 from django.views.generic import FormView, TemplateView
 from rest_framework import generics, permissions
-from rest_framework.response import Response
 
 
 class HomeView(LoginRequiredMixin, TemplateView):
@@ -49,6 +50,13 @@ class UserLoginView(LoginView):
     success_url = "/"
     redirect_authenticated_user = True
     template_name = "chat/login.html"
+
+    def get(self, request: HttpRequest, *args: str, **kwargs: Any) -> HttpResponse:
+        if "anon" in request.GET:
+            user, created = User.objects.get_or_create(username="anon")
+            login(request, user)
+            return redirect("home")
+        return super().get(request, *args, **kwargs)
 
 
 class MessagesAPIView(generics.ListAPIView):

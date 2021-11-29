@@ -1,7 +1,5 @@
-import asyncio
 import json
 from datetime import datetime
-from typing import Optional
 
 from channels.db import database_sync_to_async  # type: ignore
 from channels.generic.websocket import AsyncWebsocketConsumer  # type: ignore
