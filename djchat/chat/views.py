@@ -1,21 +1,20 @@
 from datetime import datetime
 from time import time
 from typing import Any
-from django.http.request import HttpRequest
-from django.urls import reverse_lazy
-from django.conf import settings
-from django.contrib.auth.forms import UserCreationForm
-from django.contrib.auth.views import LoginView, LogoutView
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.views.generic import FormView, TemplateView
-from django.http.response import HttpResponse
-from django.shortcuts import render
-from rest_framework import generics
-from rest_framework.response import Response
-from rest_framework import permissions
 
 from chat.models import ChatMessage
 from chat.serializers import ChatMessageSerializer
+from django.conf import settings
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.views import LoginView, LogoutView
+from django.http.request import HttpRequest
+from django.http.response import HttpResponse
+from django.shortcuts import render
+from django.urls import reverse_lazy
+from django.views.generic import FormView, TemplateView
+from rest_framework import generics, permissions
+from rest_framework.response import Response
 
 
 class HomeView(LoginRequiredMixin, TemplateView):
