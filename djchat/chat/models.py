@@ -1,3 +1,4 @@
+from datetime import datetime
 from django.db import models
 from django.contrib.auth.models import User
 
@@ -5,7 +6,7 @@ from django.contrib.auth.models import User
 class ChatMessage(models.Model):
     user = models.ForeignKey(User, verbose_name="пользователь", on_delete=models.PROTECT)
     message = models.TextField(verbose_name="Сообщение")
-    post_time = models.DateTimeField(verbose_name="Время публикации", auto_now_add=True)
+    post_time = models.DateTimeField(verbose_name="Время публикации", default=datetime.today)
 
     class Meta:
         verbose_name = "Сообщение"

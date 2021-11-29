@@ -23,28 +23,20 @@ class ChatConsumer(AsyncWebsocketConsumer):
         self.user = self.scope["user"]
         self.data = json.loads(text_data)
         message = self.format_msg()
+        self.post_datetime = self.get_post_datetime()
 
-        delay = None
-        if "delay" in self.data:
-            delay = int(self.data["delay"])
-
-        await self.process_msg(message, sleep=delay)
+        await self.save_message()
+        if self.cur_datetime == self.post_datetime:
+            await self.channel_layer.group_send(self.group_name, {"type": "chat_message", "message": message})
 
     async def chat_message(self, event: dict[str, str]) -> None:
         message = event["message"]
         await self.send(text_data=json.dumps({"message": message}))
 
-    async def process_msg(self, message: str, sleep: Optional[int] = None) -> None:
-        if sleep:
-            await asyncio.sleep(sleep)
-
-        await self.save_message()
-        await self.channel_layer.group_send(self.group_name, {"type": "chat_message", "message": message})
-
     @database_sync_to_async
     def save_message(self) -> bool:
         try:
-            ChatMessage.objects.create(user=self.user, message=self.data["message"], post_time=self.cur_datetime)
+            ChatMessage.objects.create(user=self.user, message=self.data["message"], post_time=self.post_datetime)
         except ValidationError:
             return False
 
@@ -57,3 +49,15 @@ class ChatConsumer(AsyncWebsocketConsumer):
         message += f'{self.data["message"]}</p>'
 
         return message
+
+    def get_post_datetime(self) -> datetime:
+
+        if "pub_datetime" in self.data:
+            try:
+                post_time = datetime.fromisoformat(self.data["pub_datetime"])
+            except ValueError:
+                return self.cur_datetime
+
+            return post_time
+
+        return self.cur_datetime

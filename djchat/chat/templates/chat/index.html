@@ -8,9 +8,16 @@
     <div id="chat-window" style="height: 700px;overflow-y: scroll;">
     
     </div>
-    <input id="chat-message-input" type="text" size="100"><br>
-    <input id="chat-message-submit" type="button" value="Отправить">
-    <input id="chat-message-submit-with-delay" type="button" value="Отправить через 10 секунд">
+    <p>
+        <input id="chat-message-input" type="text" size="100">
+        <input id="chat-message-submit" type="button" value="Отправить">
+    </p>
+    <p>
+        <input type="checkbox" id="delayed">
+        Опубликовать после: 
+        <input type="date" id="pub-date" value="{{ cur_date }}" min="{{ cur_date }}" > 
+        <input type="time" id="pub-time" value="{{ cur_time }}">
+    </p>
     <script>
         let curPage = 1;
 
@@ -22,7 +29,9 @@
 
         chatSocket.onmessage = function(e) {
             const data = JSON.parse(e.data);
-            document.querySelector('#chat-window').innerHTML += (data.message + '\n');
+            const chatWindow = document.querySelector('#chat-window');
+            chatWindow.innerHTML += (data.message + '\n');
+            chatWindow.scrollTo(0, chatWindow.scrollHeight);
         };
 
         document.querySelector('#chat-message-input').focus();
@@ -34,23 +43,19 @@
 
         document.querySelector('#chat-message-submit').onclick = e => {
             const messageInputDom = document.querySelector('#chat-message-input');
+            const delayed = document.querySelector('#delayed').checked;
             const message = messageInputDom.value;
             const data = {'message': message};
+
+            if(delayed){
+                const pubDate = document.querySelector('#pub-date').value;
+                const pubTime = document.querySelector('#pub-time').value;
+                data.pub_datetime = pubDate + " " + pubTime;
+            }
             chatSocket.send(JSON.stringify(data));
             if(curPage != 1){
                 loadMessages("{% url "messages" %}?page=1");
             }
-            messageInputDom.value = '';
-        };
-
-        document.querySelector('#chat-message-submit-with-delay').onclick = function(e) {
-            const messageInputDom = document.querySelector('#chat-message-input');
-            const message = messageInputDom.value;
-            chatSocket.send(JSON.stringify({
-                'message': message,
-                'delay': 10,
-            }));
-            
             messageInputDom.value = '';
         };
 
@@ -65,13 +70,14 @@
 
         function printMessages(data){
             const messages = data.results.reverse();
+            const chatWindow = document.querySelector('#chat-window');
             let messagesHtml = '';
             messages.forEach((item, index, array) => {
                 messagesHtml += "<p><b>" + item.username + "</b><br>"
                 messagesHtml += "<b>" + item.post_time + " > </b>"
                 messagesHtml += item.message + "</p>"
             });
-            document.querySelector('#chat-window').innerHTML = messagesHtml;
+            chatWindow.innerHTML = messagesHtml;
             printPagination(data.count);
         }
 

@@ -1,3 +1,5 @@
+from datetime import datetime
+from time import time
 from typing import Any
 from django.http.request import HttpRequest
 from django.urls import reverse_lazy
@@ -24,6 +26,9 @@ class HomeView(LoginRequiredMixin, TemplateView):
         context = super().get_context_data(**kwargs)
         context["user"] = self.request.user
         context["page_size"] = settings.REST_FRAMEWORK["PAGE_SIZE"]
+        today = datetime.today()
+        context["cur_date"] = today.date().isoformat()
+        context["cur_time"] = today.time().isoformat(timespec="minutes")
         return context
 
 
@@ -48,6 +53,6 @@ class UserLoginView(LoginView):
 
 
 class MessagesAPIView(generics.ListAPIView):
-    queryset = ChatMessage.objects.all().order_by("-post_time")
+    queryset = ChatMessage.objects.filter(post_time__lte=datetime.today()).order_by("-post_time")
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = ChatMessageSerializer
